@@ -6,9 +6,20 @@ using System.Threading.Tasks;
 
 namespace BaggageSortingH2
 {
-    class Baggage
+    public enum Destination
+    {
+        England,
+        Japan,
+        //Germany,
+        //India,
+        Australia
+    }
+
+
+    public class Baggage
     {
         private int baggageId;
+        private static int incrementer = 3000;
 
         public int BaggageId
         {
@@ -24,5 +35,18 @@ namespace BaggageSortingH2
             set { stamp = value; }
         }
 
+        private Destination destination;
+
+        public Destination Destination
+        {
+            get { return destination; }
+            set { destination = value; }
+        }
+
+        public Baggage(Destination destination)
+        {
+            Destination = destination;
+            BaggageId = incrementer++;
+        }
     }
 }

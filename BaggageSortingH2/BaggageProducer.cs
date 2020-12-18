@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace BaggageSortingH2
 {
+    //Responsible for producing baggage objects to the counters
     class BaggageProducer
     {
         private List<Counter> counters;
@@ -32,7 +33,7 @@ namespace BaggageSortingH2
             {
                 Counter counter = Counters[random.Next(0, Counters.Count)];
 
-                if (Monitor.TryEnter(counter))
+                if (Monitor.TryEnter(counter.BaggageBuffer))
                 {
                     if (counter.IsOpen)
                     {
@@ -40,7 +41,7 @@ namespace BaggageSortingH2
                         {
                             //Counter is full, need to wait for it to be emptied
                             Console.WriteLine(counter.Name + " is currently full, waiting for available slot");
-                            Monitor.Wait(counter, 600);
+                            Monitor.Wait(counter, 2000);
                         }
 
                         for (int i = 0; i < counter.BaggageBuffer.Length; i++)
@@ -48,18 +49,18 @@ namespace BaggageSortingH2
                             if (counter.BaggageBuffer[i] == null)
                             {
                                 //Add a random baggage to the counter
-                                counter.BaggageBuffer[i] = new Baggage(counter.CounterDestination);
+                                counter.BaggageBuffer[i] = new Baggage(counter.CounterDestination); //Will need to change if flightSchedule is to be implemented
                                 Console.WriteLine(counter.BaggageBuffer[i].BaggageId + " has been sent to " + counter.Name);
                                 i = counter.BaggageBuffer.Length + 1;
                             }
                         }
-                        Monitor.Pulse(counter);
-                        Monitor.Exit(counter);
+                        Monitor.Pulse(counter.BaggageBuffer);
+                        Monitor.Exit(counter.BaggageBuffer);
                     }
                     else
                     {
-                        //Wait if the counter is not open
-                        Console.WriteLine(counter.Name + " is current closed, waiting for it to be open...");
+                        Console.WriteLine(counter.Name + " is current closed");
+                        Monitor.Exit(counter.BaggageBuffer);
                         //if (!Monitor.Wait(counter, 200))
                         //{
                         //    Console.WriteLine(counter.Name + " was currently unavailable");
@@ -69,7 +70,7 @@ namespace BaggageSortingH2
                     }
                 }
                 //Make not so fast baggage
-                Thread.Sleep(1500);
+                Thread.Sleep(1000);
             }
         }
 

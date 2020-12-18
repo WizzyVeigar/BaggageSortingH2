@@ -9,7 +9,6 @@ namespace BaggageSortingH2
 {
     //TODO CHECK IF TERMINAL IS OPEN BEFORE PUTTING STUFF ON IT
 
-
     class BaggageSorter : IHaveBaggageBuffer
     {
         private Baggage[] baggageBuffer;
@@ -40,6 +39,11 @@ namespace BaggageSortingH2
             }
             return amount;
         }
+        public BaggageSorter(int maxSize, List<Terminal> terminals)
+        {
+            BaggageBuffer = new Baggage[maxSize];
+            Terminals = terminals;
+        }
 
         //Stamp the baggage here too
         public void SortBaggage()
@@ -60,25 +64,27 @@ namespace BaggageSortingH2
                         //Check null baggage
                         if (BaggageBuffer[i] != null)
                         {
-
-                            Console.WriteLine(baggageBuffer[i].BaggageId + " has been checkIn stamped");
-                            StampBaggage(baggageBuffer[i], true);
+                            if (baggageBuffer[i].Stamp.CheckIn == DateTime.MinValue)
+                            {
+                                Console.WriteLine(baggageBuffer[i].BaggageId + " has been checkIn stamped, going to " + baggageBuffer[i].Destination);
+                                StampBaggage(baggageBuffer[i], true);
+                            }
 
                             for (int j = 0; j < Terminals.Count; j++)
                             {
-                                //Find correct terminal
+                                //Find the terminal with the same destination as the baggage
                                 if (BaggageBuffer[i].Destination == Terminals[j].Destination)
                                 {
-                                    if (Monitor.TryEnter(terminals[j], 1000))
+                                    if (Monitor.TryEnter(terminals[j], 3000))
                                     {
                                         //Wait for terminal to be fillable
                                         while (Terminals[j].GetCurrentBufferAmount() >= Terminals[j].BaggageBuffer.Length)
                                         {
                                             Console.WriteLine("Waiting for terminal buffer to de-fill");
-                                            Monitor.Pulse(Terminals[j]);
-                                            Monitor.Wait(Terminals[j], 1000);
+                                            Monitor.Wait(Terminals[j]);
                                         }
 
+                                        //Loop to find a not null spot
                                         for (int k = 0; k < Terminals[j].BaggageBuffer.Length; k++)
                                         {
                                             //Put into terminal baggageBuffer
@@ -88,16 +94,13 @@ namespace BaggageSortingH2
                                                 Console.WriteLine(BaggageBuffer[i].BaggageId + " has been stamped out");
                                                 StampBaggage(baggageBuffer[i], false);
 
-                                                //output baggagestatus
-
+                                                //Putting baggage from the buffer to the corret terminal
                                                 Terminals[j].BaggageBuffer[k] = BaggageBuffer[i];
                                                 BaggageBuffer[i] = null;
-
 
                                                 k = (Terminals[j].BaggageBuffer.Length) + 1;
                                             }
                                         }
-
 
                                         Monitor.Pulse(Terminals[j]);
                                         Monitor.Exit(Terminals[j]);
@@ -105,8 +108,12 @@ namespace BaggageSortingH2
                                     }
                                     else
                                     {
-                                        Console.WriteLine("Terminal Unavailable");
+                                        Console.WriteLine("Terminal Unavailable, trying again soon..");
                                     }
+                                }
+                                else
+                                {
+                                    //Make check if the Terminal is closed
                                 }
                             }
                         }
@@ -118,6 +125,11 @@ namespace BaggageSortingH2
             }
         }
 
+        /// <summary>
+        /// Stamps the baggage with Datetimes of it's arrival and departure from the sorter
+        /// </summary>
+        /// <param name="baggage">The baggage which has the <see cref="Baggage.Stamp"/></param>
+        /// <param name="isCheckIn">Stamps <see cref="BaggageStamp.CheckIn"/> if true, otherwise stamps <seealso cref="BaggageStamp.SortedOut"/></param>
         public void StampBaggage(Baggage baggage, bool isCheckIn)
         {
             if (isCheckIn)
@@ -128,13 +140,6 @@ namespace BaggageSortingH2
             {
                 baggage.Stamp.SortedOut = DateTime.Now;
             }
-        }
-
-
-        public BaggageSorter(int maxSize, List<Terminal> terminals)
-        {
-            BaggageBuffer = new Baggage[maxSize];
-            Terminals = terminals;
         }
     }
 }

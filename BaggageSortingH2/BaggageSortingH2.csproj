@@ -47,9 +47,12 @@
     <Compile Include="BaggageProducer.cs" />
     <Compile Include="BaggageSorter.cs" />
     <Compile Include="BaggageStamp.cs" />
+    <Compile Include="CentralManager.cs" />
     <Compile Include="Counter.cs" />
     <Compile Include="IHaveBaggageBuffer.cs" />
     <Compile Include="IOpenClose.cs" />
+    <Compile Include="Plane.cs" />
+    <Compile Include="PlaneAssigner.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Terminal.cs" />

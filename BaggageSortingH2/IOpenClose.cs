@@ -8,6 +8,7 @@ namespace BaggageSortingH2
 {
     interface IOpenClose
     {
-        bool IsOpen { get; }
+        bool IsOpen { get; set; }
+        string Name { get;  }
     }
 }

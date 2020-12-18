@@ -75,11 +75,12 @@ namespace BaggageSortingH2
                 {
                     if (Monitor.TryEnter(BaggageBuffer))
                     {
-                        while (GetCurrentBufferAmount() == 0)
+                        if (IsOpen)
                         {
-                            Console.WriteLine("Waiting for baggage at " + Name);
-                            Monitor.Pulse(BaggageBuffer);
-                            Monitor.Wait(BaggageBuffer, 1000);
+                            while (GetCurrentBufferAmount() == 0)
+                            {
+                                Monitor.Wait(BaggageBuffer, 2000);
+                            }
                         }
 
                         if (Monitor.TryEnter(Sorter.BaggageBuffer))
